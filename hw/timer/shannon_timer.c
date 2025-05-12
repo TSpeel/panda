@@ -16,6 +16,7 @@
 
 #include "hw/avatar/configurable_machine.h"
 #include "hw/cpu/a9mpcore.h"
+#include "hw/cpu/a15mpcore.h"
 
 #define SH_TIMER_DEBUG_GATE 1
 
@@ -59,10 +60,10 @@ static void shannon_timer_set_irq(void *opaque, int irq, int level)
 
 static void shannon_timer_update(shannon_timer_state *s)
 {
-    A9MPPrivState *gic = (A9MPPrivState *) configurable_get_peripheral("gic");
+    A15MPPrivState *gic = (A15MPPrivState *) configurable_get_peripheral("gic");
     /* Update interrupts.  */
     DPRINTF("SetIRQLevel %d: %d\n", s->irq_num, s->int_level);
-    configurable_a9mp_inject_irq(gic, s->irq_num-32, s->int_level);
+    configurable_a15mp_inject_irq(gic, s->irq_num-32, s->int_level);
 }
 
 
