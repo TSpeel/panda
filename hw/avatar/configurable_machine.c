@@ -36,7 +36,6 @@
 #include "hw/arm/arm.h"
 #include "hw/avatar/arm_helper.h"
 #include "hw/cpu/a9mpcore.h"
-#include "hw/cpu/a15mpcore.h"
 typedef ARMCPU THISCPU;
 
 #elif defined(TARGET_I386) || defined(TARGET_X86_64)
@@ -645,11 +644,6 @@ QObject * configurable_get_peripheral(char * name) {
 #if defined(TARGET_ARM)
 void configurable_a9mp_inject_irq(void *opaque, int irq, int level){
     A9MPPrivState *s = (A9MPPrivState *)opaque;
-    qemu_set_irq(qdev_get_gpio_in(DEVICE(&s->gic), irq), level);
-}
-
-void configurable_a15mp_inject_irq(void *opaque, int irq, int level){
-    A15MPPrivState *s = (A15MPPrivState *)opaque;
     qemu_set_irq(qdev_get_gpio_in(DEVICE(&s->gic), irq), level);
 }
 #endif
