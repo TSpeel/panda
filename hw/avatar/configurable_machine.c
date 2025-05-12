@@ -217,7 +217,7 @@ static SysBusDevice *make_configurable_device(const char *qemu_name,
     sysbus_mmio_map(s, 0, address);
 
 #if defined(TARGET_ARM)
-    if (!strcmp(qemu_name, "a9mpcore_priv")) {
+    if (!strcmp(qemu_name, "a9mpcore_priv") && !strcmp(qemu_name, "a15mpcore_priv")) {
         /*  TODO more generic irq connection */
         qemu_log_mask(LOG_AVATAR, "cooking interrupts\n");
         sysbus_connect_irq(s, 0,
