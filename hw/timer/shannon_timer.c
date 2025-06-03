@@ -193,7 +193,7 @@ static void shannon_timer_init(Object *obj)
     SysBusDevice *sbd = SYS_BUS_DEVICE(obj);
     shannon_timer_state *s = SHANNON_TIMER(obj);
     memory_region_init_io(&s->iomem, OBJECT(s), &shannon_timer_ops, s,
-            TYPE_SHANNON_TIMER, 0xf0);
+            TYPE_SHANNON_TIMER, s->region_size);
     sysbus_init_mmio(sbd, &s->iomem);
 }
 
@@ -201,6 +201,7 @@ static void shannon_timer_init(Object *obj)
 static Property shannon_timer_properties[] = {
     DEFINE_PROP_UINT32("irq_num", shannon_timer_state, irq_num, 35),
     DEFINE_PROP_UINT32("freq", shannon_timer_state, freq, 1000ll),
+    DEFINE_PROP_UINT32("region_size", shannon_timer_state, region_size, 0xf0),
     DEFINE_PROP_END_OF_LIST(),
 };
 
