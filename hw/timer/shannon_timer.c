@@ -42,6 +42,7 @@ typedef struct {
     uint32_t freq;
     uint32_t int_level;
     uint32_t irq_num;
+    uint32_t region_size;
     MemoryRegion iomem;
     qemu_irq irq;
 } shannon_timer_state;
