@@ -37,6 +37,7 @@
 #include "hw/avatar/arm_helper.h"
 #include "hw/cpu/a9mpcore.h"
 #include "hw/cpu/a15mpcore.h"
+#include "hw/cpu/arm11mpcore.h"
 typedef ARMCPU THISCPU;
 
 #elif defined(TARGET_I386) || defined(TARGET_X86_64)
@@ -217,7 +218,7 @@ static SysBusDevice *make_configurable_device(const char *qemu_name,
     sysbus_mmio_map(s, 0, address);
 
 #if defined(TARGET_ARM)
-    if (!strcmp(qemu_name, "a9mpcore_priv") && !strcmp(qemu_name, "a15mpcore_priv")) {
+    if (!strcmp(qemu_name, "a9mpcore_priv") && !strcmp(qemu_name, "a15mpcore_priv") && !strcmp(qemu_name, "arm11mpcore_priv")) {
         /*  TODO more generic irq connection */
         qemu_log_mask(LOG_AVATAR, "cooking interrupts\n");
         sysbus_connect_irq(s, 0,
@@ -650,6 +651,11 @@ void configurable_a9mp_inject_irq(void *opaque, int irq, int level){
 
 void configurable_a15mp_inject_irq(void *opaque, int irq, int level){
     A15MPPrivState *s = (A15MPPrivState *)opaque;
+    qemu_set_irq(qdev_get_gpio_in(DEVICE(&s->gic), irq), level);
+}
+
+void configurable_mpcore_inject_irq(void *opaque, int irq, int level){
+    ARM11MPCorePriveState *s = (ARM11MPCorePriveState *)opaque;
     qemu_set_irq(qdev_get_gpio_in(DEVICE(&s->gic), irq), level);
 }
 #endif
