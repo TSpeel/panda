@@ -45,6 +45,8 @@ typedef struct {
     uint32_t irq_num;
     MemoryRegion iomem;
     qemu_irq irq;
+    QEMUTimer *irq_retry_timer;
+    bool is_retrying_irq;
 } shannon_timer_state;
 
 
@@ -66,7 +68,25 @@ static void shannon_timer_update(shannon_timer_state *s)
     configurable_a15mp_inject_irq(gic, s->irq_num-32, s->int_level);
 }
 
+static void shannon_timer_irq_retry_tick(void *opaque)
+{
+    shannon_timer_state *s = (shannon_timer_state *)opaque;
 
+    if (!s->is_retrying_irq) {
+        return;
+    }
+
+    qemu_log_mask(LOG_GUEST_ERROR, "%s: Re-asserting IRQ %d\n",
+                  TYPE_SHANNON_TIMER, s->irq_num);
+
+    s->int_level = 0;
+    shannon_timer_update(s);
+
+    s->int_level = 1;
+    shannon_timer_update(s);
+
+    timer_mod(s->irq_retry_timer, qemu_clock_get_ms(QEMU_CLOCK_VIRTUAL) + 100);
+}
 
 
 static uint64_t shannon_timer_read(void *opaque, hwaddr offset,
@@ -131,6 +151,14 @@ static void shannon_timer_write(void *opaque, hwaddr offset,
         break;
     case 0x10:
         //shannon_timer_update(s); //disable irq if necessary
+        //s->int_level = 0;
+        //shannon_timer_update(s);
+        //break;
+        if (s->is_retrying_irq) {
+            qemu_log_mask(LOG_GUEST_ERROR,"%s: Guest acknowledged IRQ %d. Stopping retry loop.\n",TYPE_SHANNON_TIMER, s->irq_num);
+            s->is_retrying_irq = false;
+            timer_del(s->irq_retry_timer);
+        }
         s->int_level = 0;
         shannon_timer_update(s);
         break;
@@ -146,10 +174,24 @@ static void shannon_timer_write(void *opaque, hwaddr offset,
 static void shannon_timer_tick(void *opaque)
 {
     shannon_timer_state *s = (shannon_timer_state *)opaque;
-    DPRINTF("Shannon timer tick (%d)\n", s->irq_num);
-    s->int_level = 1;
-    shannon_timer_update(s);
+
+    if (s->is_retrying_irq) {
+        return;
+    }
+
+    qemu_log_mask(LOG_GUEST_ERROR,"%s: Original timer tick for IRQ %d. Starting retry loop.\n",TYPE_SHANNON_TIMER, s->irq_num);
+
+    s->is_retrying_irq = true;
+    shannon_timer_irq_retry_tick(s);
 }
+
+//static void shannon_timer_tick(void *opaque)
+//{
+//    shannon_timer_state *s = (shannon_timer_state *)opaque;
+//    DPRINTF("Shannon timer tick (%d)\n", s->irq_num);
+//    s->int_level = 1;
+//    shannon_timer_update(s);
+//}
 
 static const VMStateDescription vmstate_shannon_timer = {
     .name = TYPE_SHANNON_TIMER,
@@ -181,6 +223,10 @@ static void shannon_timer_realize(DeviceState *dev, Error **errp)
     s->control = 0x0;
     s->limit = 0;
     s->int_level = 0;
+
+        
+    s->is_retrying_irq = false;
+    s->irq_retry_timer = timer_new_ms(QEMU_CLOCK_VIRTUAL, shannon_timer_irq_retry_tick, s);
 
     bh = qemu_bh_new(shannon_timer_tick, s);
     s->timer = ptimer_init(bh, PTIMER_POLICY_DEFAULT);
