@@ -81,6 +81,9 @@ static void shannon_timer_irq_retry_tick(void *opaque)
     qemu_log_mask(LOG_GUEST_ERROR, "%s: Re-asserting IRQ %d\n",
                   TYPE_SHANNON_TIMER, s->irq_num);
 
+    s->int_level = 0;
+    shannon_timer_update(s);
+
     s->int_level = 1;
     shannon_timer_update(s);
 
