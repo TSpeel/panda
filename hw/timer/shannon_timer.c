@@ -34,22 +34,7 @@
 #define STIMER_CTRL_ENABLE            (1 << 0)
 #define STIMER_CTRL_PERIODIC          (1 << 1)
 
-static void shannon_timer_irq_retry_tick(void *opaque)
-{
-    shannon_timer_state *s = (shannon_timer_state *)opaque;
 
-    if (!s->is_retrying_irq) {
-        return;
-    }
-
-    qemu_log_mask(LOG_GUEST_ERROR, "%s: Re-asserting IRQ %d\n",
-                  TYPE_SHANNON_TIMER, s->irq_num);
-
-    s->int_level = 1;
-    shannon_timer_update(s);
-
-    timer_mod(s->irq_retry_timer, qemu_clock_get_ms(QEMU_CLOCK_VIRTUAL) + 100);
-}
 
 typedef struct {
     SysBusDevice parent_obj;
@@ -85,7 +70,22 @@ static void shannon_timer_update(shannon_timer_state *s)
 }
 
 
+static void shannon_timer_irq_retry_tick(void *opaque)
+{
+    shannon_timer_state *s = (shannon_timer_state *)opaque;
 
+    if (!s->is_retrying_irq) {
+        return;
+    }
+
+    qemu_log_mask(LOG_GUEST_ERROR, "%s: Re-asserting IRQ %d\n",
+                  TYPE_SHANNON_TIMER, s->irq_num);
+
+    s->int_level = 1;
+    shannon_timer_update(s);
+
+    timer_mod(s->irq_retry_timer, qemu_clock_get_ms(QEMU_CLOCK_VIRTUAL) + 100);
+}
 
 static uint64_t shannon_timer_read(void *opaque, hwaddr offset,
                              uint32_t value)
