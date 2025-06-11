@@ -86,7 +86,7 @@ static void shannon_timer_irq_retry_off_tick(void *opaque)
     s->int_level = 0;
     shannon_timer_update(s);
 
-    timer_mod(s->irq_retry_on_timer, qemu_clock_get_ms(QEMU_CLOCK_VIRTUAL) + 10);
+    timer_mod(s->irq_retry_on_timer, qemu_clock_get_ms(QEMU_CLOCK_VIRTUAL) + 1000);
 }
 
 static void shannon_timer_irq_retry_on_tick(void *opaque)
@@ -103,7 +103,7 @@ static void shannon_timer_irq_retry_on_tick(void *opaque)
     s->int_level = 1;
     shannon_timer_update(s);
 
-    timer_mod(s->irq_retry_off_timer, qemu_clock_get_ms(QEMU_CLOCK_VIRTUAL) + 500);
+    timer_mod(s->irq_retry_off_timer, qemu_clock_get_ms(QEMU_CLOCK_VIRTUAL) + 5000);
 }
 
 
