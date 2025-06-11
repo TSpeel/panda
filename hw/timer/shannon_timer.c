@@ -15,7 +15,7 @@
 #include "qemu/log.h"
 
 #include "hw/avatar/configurable_machine.h"
-#include "hw/cpu/a9mpcore.hh"
+#include "hw/cpu/a9mpcore.h"
 #include "hw/cpu/a15mpcore.h"
 
 #define SH_TIMER_DEBUG_GATE 1
