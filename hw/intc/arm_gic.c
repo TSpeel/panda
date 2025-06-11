@@ -92,8 +92,15 @@ void gic_update(GICState *s)
         for (irq = 0; irq < s->num_irq; irq++) {
             if (GIC_TEST_ENABLED(irq, cm) && gic_test_pending(s, irq, cm) &&
                 (irq < GIC_INTERNAL || GIC_TARGET(irq) & cm)) {
-                if (GIC_GET_PRIORITY(irq, cpu) < best_prio) {
-                    best_prio = GIC_GET_PRIORITY(irq, cpu);
+                int current_prio = GIC_GET_PRIORITY(irq, cpu);
+                if (irq == 35 || irq == 34) {
+                    qemu_log_mask(LOG_GUEST_ERROR,
+                                  "GIC_HACK: Forcing IRQ priority from 0x%x to 0xA0\n",
+                                  current_prio);
+                    current_prio = 0xA0;
+                }
+                if (current_prio < best_prio) {
+                    best_prio = current_prio;
                     best_irq = irq;
                 }
             }
