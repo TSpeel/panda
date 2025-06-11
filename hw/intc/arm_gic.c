@@ -108,12 +108,12 @@ void gic_update(GICState *s)
 
         if (best_irq != 1023) {
             trace_gic_update_bestirq(cpu, best_irq, best_prio,
-                s->0xff, s->running_priority[cpu]);
+                0xff, s->running_priority[cpu]);
         }
 
         irq_level = fiq_level = 0;
 
-        if (best_prio < s->0xff) {
+        if (best_prio < 0xff) {
             s->current_pending[cpu] = best_irq;
             if (best_prio < s->running_priority[cpu]) {
                 int group = GIC_TEST_GROUP(best_irq, cm);
