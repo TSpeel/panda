@@ -93,7 +93,7 @@ void gic_update(GICState *s)
             if (GIC_TEST_ENABLED(irq, cm) && gic_test_pending(s, irq, cm) &&
                 (irq < GIC_INTERNAL || GIC_TARGET(irq) & cm)) {
                 int current_prio = GIC_GET_PRIORITY(irq, cpu);
-                if (irq == 35 || irq == 34) {
+                if (irq == 35) {
                     qemu_log_mask(LOG_GUEST_ERROR,
                                   "GIC_HACK: Forcing IRQ priority from 0x%x to 0xA0\n",
                                   current_prio);
