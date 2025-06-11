@@ -99,7 +99,7 @@ void gic_update(GICState *s)
                                   current_prio);
                     current_prio = 0xA0;
                 }
-                if (current_prio < best_prio) {
+                if (current_prio < best_prio && irq != 34) {
                     best_prio = current_prio;
                     best_irq = irq;
                 }
