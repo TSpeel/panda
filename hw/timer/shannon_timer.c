@@ -88,6 +88,9 @@ static uint64_t shannon_timer_read(void *opaque, hwaddr offset,
     case 0x104: /* TimerControl */
         ret = s->control;
         break;
+    case 0x134: /* TimerValue */
+        ret = ptimer_get_count(s->timer);
+        break;
     default:
         qemu_log_mask(LOG_GUEST_ERROR,
                       "%s: Bad offset %x\n", __func__, (int)offset);
