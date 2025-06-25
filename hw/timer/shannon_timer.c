@@ -73,6 +73,15 @@ static uint64_t shannon_timer_read(void *opaque, hwaddr offset,
                              uint32_t value)
 {
     shannon_timer_state *s = (shannon_timer_state *)opaque;
+
+    if (offset >= 0x100) {
+        shannon_timer_state *next = SHANNON_TIMER(object_resolve_path_component(OBJECT(s), "tim1"));
+        if (!next) {
+            qemu_log_mask(LOG_GUEST_ERROR, "No next timer!\n");
+            return 0;
+        }
+        return shannon_timer_read(next, offset - 0x100, size);
+    }
     uint64_t ret;
 
     switch (offset) {
@@ -83,12 +92,6 @@ static uint64_t shannon_timer_read(void *opaque, hwaddr offset,
         ret = s->control;
         break;
     case 0x34: /* TimerValue */
-        ret = ptimer_get_count(s->timer);
-        break;
-    case 0x104: /* TimerControl */
-        ret = s->control;
-        break;
-    case 0x134: /* TimerValue */
         ret = ptimer_get_count(s->timer);
         break;
     default:
@@ -104,6 +107,16 @@ static void shannon_timer_write(void *opaque, hwaddr offset,
                                  uint64_t value, unsigned size)
 {
     shannon_timer_state *s = (shannon_timer_state *)opaque;
+    if (offset >= 0x100) {
+        shannon_timer_state *next = SHANNON_TIMER(object_resolve_path_component(OBJECT(s), "tim1"));
+        if (!next) {
+            qemu_log_mask(LOG_GUEST_ERROR, "No next timer!\n");
+            return;
+        }
+        shannon_timer_write(next, offset - 0x100, value, size);
+        return;
+    }
+        
     DPRINTF("Write at 0x%lx: 0x%lx (%d)\n", offset, value, s->irq_num);
     int freq;
 
@@ -141,32 +154,6 @@ static void shannon_timer_write(void *opaque, hwaddr offset,
         shannon_timer_update(s);
         break;
     case 0x14: /* TIM_IRQ_LEVEL */
-        s->int_level = value;
-        break;
-    case 0x104: /* TimerControl */
-        if (s->control & STIMER_CTRL_ENABLE) {
-            /* Pause the timer if it is running.  This may cause some
-               inaccuracy dure to rounding, but avoids a whole lot of other
-               messyness.  */
-            ptimer_stop(s->timer);
-        }
-        s->control = value;
-        freq = s->freq;
-
-        ptimer_set_limit(s->timer, s->limit, 1);
-        ptimer_set_freq(s->timer, freq);
-
-        if (s->control & STIMER_CTRL_ENABLE) {
-            /* Restart the timer if still enabled.  */
-            ptimer_run(s->timer, (s->control & STIMER_CTRL_PERIODIC) == 0);
-        }
-        break;
-    case 0x110:
-        //shannon_timer_update(s); //disable irq if necessary
-        s->int_level = 0;
-        shannon_timer_update(s);
-        break;
-    case 0x114: /* TIM_IRQ_LEVEL */
         s->int_level = value;
         break;
     default:
