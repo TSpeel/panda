@@ -85,6 +85,9 @@ static uint64_t shannon_timer_read(void *opaque, hwaddr offset,
     case 0x34: /* TimerValue */
         ret = ptimer_get_count(s->timer);
         break;
+    case 0x104: /* TimerControl */
+        ret = s->control;
+        break;
     default:
         qemu_log_mask(LOG_GUEST_ERROR,
                       "%s: Bad offset %x\n", __func__, (int)offset);
@@ -135,6 +138,32 @@ static void shannon_timer_write(void *opaque, hwaddr offset,
         shannon_timer_update(s);
         break;
     case 0x14: /* TIM_IRQ_LEVEL */
+        s->int_level = value;
+        break;
+    case 0x104: /* TimerControl */
+        if (s->control & STIMER_CTRL_ENABLE) {
+            /* Pause the timer if it is running.  This may cause some
+               inaccuracy dure to rounding, but avoids a whole lot of other
+               messyness.  */
+            ptimer_stop(s->timer);
+        }
+        s->control = value;
+        freq = s->freq;
+
+        ptimer_set_limit(s->timer, s->limit, 1);
+        ptimer_set_freq(s->timer, freq);
+
+        if (s->control & STIMER_CTRL_ENABLE) {
+            /* Restart the timer if still enabled.  */
+            ptimer_run(s->timer, (s->control & STIMER_CTRL_PERIODIC) == 0);
+        }
+        break;
+    case 0x110:
+        //shannon_timer_update(s); //disable irq if necessary
+        s->int_level = 0;
+        shannon_timer_update(s);
+        break;
+    case 0x114: /* TIM_IRQ_LEVEL */
         s->int_level = value;
         break;
     default:
