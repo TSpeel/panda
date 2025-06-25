@@ -18,7 +18,7 @@
 #include "hw/cpu/a9mpcore.h"
 #include "hw/cpu/a15mpcore.h"
 
-#define SH_TIMER_DEBUG_GATE 0
+#define SH_TIMER_DEBUG_GATE 1
 
 #define DPRINTF(fmt, ...) do {                                          \
         if (SH_TIMER_DEBUG_GATE) {                                           \
