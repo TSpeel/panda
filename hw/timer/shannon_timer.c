@@ -80,7 +80,7 @@ static uint64_t shannon_timer_read(void *opaque, hwaddr offset,
             qemu_log_mask(LOG_GUEST_ERROR, "No next timer!\n");
             return 0;
         }
-        return shannon_timer_read(next, offset - 0x100, size);
+        return shannon_timer_read(next, offset - 0x100, value);
     }
     uint64_t ret;
 
